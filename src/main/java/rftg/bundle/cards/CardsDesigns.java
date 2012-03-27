@@ -2,6 +2,7 @@ package rftg.bundle.cards;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
+import rftg.bundle.cards.powers.*;
 import rftg.game.Constants;
 import rftg.game.cards.Design;
 import rftg.game.cards.Power;
@@ -67,12 +68,21 @@ public class CardsDesigns {
                         Power power = new Power();
                         power.phase = scanner.nextInt();
 
+                        String[] powerFlags = scanner.next().split("\\|");
+
+                        power.code = 0;
+
+                        long powerCode = 0;
+                        for (String powerFlag : powerFlags) {
+                            powerCode = findPowerCode(power.phase, powerFlag.trim());
+                            power.code |= powerCode;
+                        }
 
                         designs[index].powers[designs[index].num_power] = power;
                         designs[index].num_power++;
 
-                        String[] powerFlags = scanner.next().split("\\|");
-
+                        power.value = scanner.nextInt();
+                        power.times = scanner.nextInt();
 
                         break;
                     case 'V':
@@ -92,6 +102,31 @@ public class CardsDesigns {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    private long findPowerCode(int phase, String powerFlag) {
+        long flagCode = 0;
+        switch (phase) {
+            case 1:
+                flagCode = ExplorePowers.valueOf(powerFlag).getValue();
+                break;
+            case 2:
+                flagCode = DevelopPowers.valueOf(powerFlag).getValue();
+                break;
+            case 3:
+                flagCode = SettlePowers.valueOf(powerFlag).getValue();
+                break;
+            case 4:
+                flagCode = ConsumePowers.valueOf(powerFlag).getValue();
+                break;
+            case 5:
+                flagCode = ProducePowers.valueOf(powerFlag).getValue();
+                break;
+            default:
+                //TODO: manage error in the phase of the power.
+                break;
+        }
+        return flagCode;
     }
 
     //TODO: check boundary: an index that is bigger than the number of designs in the file
