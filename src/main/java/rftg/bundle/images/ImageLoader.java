@@ -1,10 +1,10 @@
-package rftg.bundle;
+package rftg.bundle.images;
 
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-class Loader {
+class ImageLoader {
 
     public static final int HEADER_LENGHT = 4;
     public static final String MAGIC_NUMBER = "RFTG";

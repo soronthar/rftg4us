@@ -1,4 +1,4 @@
-package rftg.bundle;
+package rftg.bundle.images;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -9,11 +9,11 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Bundle {
+public class ImageBundle {
     Map<ImageType, ImageCache> cacheMap = new HashMap<ImageType, ImageCache>();
     private String bundleName;
 
-    public Bundle(String bundleName) {
+    public ImageBundle(String bundleName) {
         this.bundleName = bundleName;
         initializeCache();
     }
@@ -26,8 +26,8 @@ public class Bundle {
     }
 
     public void load() {
-        Loader loader = new Loader();
-        loader.load(bundleName, new Loader.LoadCallback() {
+        ImageLoader loader = new ImageLoader();
+        loader.load(bundleName, new ImageLoader.LoadCallback() {
             public void execute(ImageType type, int index, byte[] imageData) {
                 try {
                     BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(imageData));
@@ -48,8 +48,8 @@ public class Bundle {
         ensureDirectory(outputDir + "/icons");
 
 
-        Loader loader = new Loader();
-        loader.load(bundleName, new Loader.LoadCallback() {
+        ImageLoader loader = new ImageLoader();
+        loader.load(bundleName, new ImageLoader.LoadCallback() {
             public void execute(ImageType dir, int index, byte[] imageData) {
                 String filename = outputDir + "/" + dir.getName() + "/" + dir.getName() + "-" + index + ".jpg";
                 try {

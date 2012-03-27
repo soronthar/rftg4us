@@ -1,7 +1,7 @@
 package rftg.misc;
 
-import rftg.bundle.Bundle;
-import rftg.bundle.ImageType;
+import rftg.bundle.images.ImageBundle;
+import rftg.bundle.images.ImageType;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,10 +12,10 @@ import java.awt.image.BufferedImage;
 public class Browser {
     public static void main(String[] args) {
         final JFrame test = new JFrame("Test");
-        final Bundle bundle = new Bundle("images.data");
-        bundle.load();
+        final ImageBundle imageBundle = new ImageBundle("images.data");
+        imageBundle.load();
         test.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        final Image image = new Image(bundle.getCard(0));
+        final Image image = new Image(imageBundle.getCard(0));
         test.add(image);
         test.pack();
         test.setVisible(true);
@@ -29,12 +29,12 @@ public class Browser {
                 if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
                     do {
                         inc();
-                        card = bundle.getCard(i);
+                        card = imageBundle.getCard(i);
                     } while (card == null);
                 } else if (e.getKeyCode() == KeyEvent.VK_LEFT) {
                     do {
                         dec();
-                        card = bundle.getCard(i);
+                        card = imageBundle.getCard(i);
                     } while (card == null);
                 }
 
@@ -44,12 +44,12 @@ public class Browser {
 
             private void dec() {
                 i--;
-                if (i < 0) i = bundle.count(ImageType.CARDS) - 1;
+                if (i < 0) i = imageBundle.count(ImageType.CARDS) - 1;
             }
 
             private void inc() {
                 i++;
-                if (i > bundle.count(ImageType.CARDS)) i = 0;
+                if (i > imageBundle.count(ImageType.CARDS)) i = 0;
             }
         });
     }

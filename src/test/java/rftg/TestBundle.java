@@ -4,8 +4,8 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.commons.io.FileUtils;
-import rftg.bundle.Bundle;
-import rftg.bundle.ImageType;
+import rftg.bundle.images.ImageBundle;
+import rftg.bundle.images.ImageType;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,13 +45,13 @@ public class TestBundle extends TestCase {
 
     public void testDisassemble() throws IOException {
 
-        Bundle bundle = new Bundle("images.data");
+        ImageBundle imageBundle = new ImageBundle("images.data");
         File file = new File("images");
         if (!file.exists()) {
             file.mkdir();
         }
 
-        String outputPath = bundle.disassemble("images");
+        String outputPath = imageBundle.disassemble("images");
 
         assertEquals(file.getAbsolutePath(), outputPath);
         for (ImageType imageType : ImageType.values()) {
@@ -64,12 +64,12 @@ public class TestBundle extends TestCase {
 
     public void testDisassembleOutputDirDontExist() throws IOException {
 
-        Bundle bundle = new Bundle("images.data");
+        ImageBundle imageBundle = new ImageBundle("images.data");
         File file = new File("images2");
         assertFalse(file.exists());
         assertTrue(file.mkdir());
 
-        String outputPath = bundle.disassemble("images2");
+        String outputPath = imageBundle.disassemble("images2");
 
         assertEquals(file.getAbsolutePath(), outputPath);
         for (ImageType imageType : ImageType.values()) {
@@ -81,10 +81,10 @@ public class TestBundle extends TestCase {
     }
 
     public void testLoad() {
-        Bundle bundle = new Bundle("images.data");
-        bundle.load();
+        ImageBundle imageBundle = new ImageBundle("images.data");
+        imageBundle.load();
         for (ImageType imageType : ImageType.values()) {
-            assertEquals(imageType.getName(), fixture.get(imageType).intValue(), bundle.count(imageType));
+            assertEquals(imageType.getName(), fixture.get(imageType).intValue(), imageBundle.count(imageType));
         }
 
     }
