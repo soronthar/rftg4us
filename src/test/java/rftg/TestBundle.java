@@ -58,7 +58,7 @@ public class TestBundle extends TestCase {
             File sub = new File(file, imageType.getName());
             assertTrue(sub.exists());
             assertTrue(sub.isDirectory());
-            assertEquals(fixture.get(imageType).intValue(), sub.list().length);
+            assertEquals(imageType.getName(), fixture.get(imageType).intValue(), sub.list().length);
         }
     }
 
@@ -76,17 +76,19 @@ public class TestBundle extends TestCase {
             File sub = new File(file, imageType.getName());
             assertTrue(sub.exists());
             assertTrue(sub.isDirectory());
-            assertEquals(fixture.get(imageType).intValue(), sub.list().length);
+            assertEquals(imageType.getName(), fixture.get(imageType).intValue(), sub.list().length);
         }
     }
 
     public void testLoad() {
-        Bundle bundle=new Bundle("images.data");
+        Bundle bundle = new Bundle("images.data");
         bundle.load();
-        assertEquals(fixture.get(ImageType.CARDS).intValue(),bundle.cardCount());
+        for (ImageType imageType : ImageType.values()) {
+            assertEquals(imageType.getName(), fixture.get(imageType).intValue(), bundle.count(imageType));
+        }
 
     }
-    
+
     @Override
     protected void tearDown() throws Exception {
         File file = new File("images2");

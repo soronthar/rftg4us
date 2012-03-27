@@ -1,7 +1,6 @@
 package rftg.bundle;
 
 import java.io.DataInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -17,12 +16,12 @@ class Loader {
     //TODO: test the error conditions... may need to build special files for it
     public void load(String bundleName, LoadCallback callback) {
         try {
-            DataInputStream in= new DataInputStream(getClass().getClassLoader().getResourceAsStream(bundleName));
+            DataInputStream in = new DataInputStream(getClass().getClassLoader().getResourceAsStream(bundleName));
 
             consumeHeader(in);
 
-            for(byte recordType=in.readByte();recordType!=0;recordType=in.readByte()) {
-                ImageType type=findImageTypeByIndex(recordType);
+            for (byte recordType = in.readByte(); recordType != 0; recordType = in.readByte()) {
+                ImageType type = findImageTypeByIndex(recordType);
                 int index = readInteger(in, type.getBytesToRead());
                 byte[] imageData = readImage(in);
 
@@ -36,8 +35,8 @@ class Loader {
     }
 
     private byte[] readImage(InputStream in) throws IOException {
-        int imageLength=readInteger(in,8);
-        byte[] imageData=new byte[imageLength];
+        int imageLength = readInteger(in, 8);
+        byte[] imageData = new byte[imageLength];
         int count = in.read(imageData);
         if (count < imageLength) {
             throw new RuntimeException("Wrong data");
@@ -47,22 +46,21 @@ class Loader {
 
     private ImageType findImageTypeByIndex(int recordType) {
         ImageType[] values = ImageType.values();
-        for (int i = 0; i < values.length; i++) {
-            ImageType value = values[i];
-            if (value.getIndex()==recordType) return value;
+        for (ImageType value : values) {
+            if (value.getIndex() == recordType) return value;
         }
         throw new RuntimeException("Wrong Record: " + recordType);
     }
 
     private void consumeHeader(InputStream in) throws IOException {
-        byte[] buff=new byte[HEADER_LENGHT];
+        byte[] buff = new byte[HEADER_LENGHT];
 
         int read = in.read(buff);
-        if (read==-1) {
+        if (read == -1) {
             throw new RuntimeException("wrong file.. too short");
         }
 
-        String header=new String(buff);
+        String header = new String(buff);
         if (!header.equals(MAGIC_NUMBER)) {
             throw new RuntimeException("Image Bundle not for RFTG: Wrong Header");
         }
@@ -70,13 +68,12 @@ class Loader {
 
 
     private static int readInteger(InputStream in, int bytesToRead) throws IOException {
-        if (bytesToRead==0) return -1;
+        if (bytesToRead == 0) return -1;
         byte[] buf;
         int index;
         buf = new byte[bytesToRead];
         in.read(buf);
-        index=Integer.parseInt(new String(buf).trim());
-//        index=Integer.parseInt(new String(buf).trim());
+        index = Integer.parseInt(new String(buf).trim());
         return index;
     }
 

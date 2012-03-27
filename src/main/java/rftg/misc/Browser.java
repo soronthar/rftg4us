@@ -1,23 +1,14 @@
 package rftg.misc;
 
 import rftg.bundle.Bundle;
+import rftg.bundle.ImageType;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 
-/**
- * Created by IntelliJ IDEA.
- * User: Rafael Alvarez
- * Date: 3/27/12
- * Time: 12:10 AM
- * To change this template use File | Settings | File Templates.
- */
 public class Browser {
     public static void main(String[] args) {
         final JFrame test = new JFrame("Test");
@@ -53,12 +44,12 @@ public class Browser {
 
             private void dec() {
                 i--;
-                if (i < 0) i = bundle.cardCount()-1;
+                if (i < 0) i = bundle.count(ImageType.CARDS) - 1;
             }
 
             private void inc() {
                 i++;
-                if (i > bundle.cardCount()) i = 0;
+                if (i > bundle.count(ImageType.CARDS)) i = 0;
             }
         });
     }
@@ -85,7 +76,7 @@ public class Browser {
         }
 
         public void setImage(BufferedImage card) {
-            this.img=card;
+            this.img = card;
             this.repaint();
         }
     }
