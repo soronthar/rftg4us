@@ -1,11 +1,9 @@
-package rftg;
+package rftg.bundle.images;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.commons.io.FileUtils;
-import rftg.bundle.images.ImageBundle;
-import rftg.bundle.images.ImageType;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +12,7 @@ import java.util.EnumMap;
 /**
  * Unit test for simple App.
  */
-public class TestBundle extends TestCase {
+public class TestImageBundle extends TestCase {
     private static EnumMap<ImageType, Integer> fixture;
 
     static {
@@ -32,7 +30,7 @@ public class TestBundle extends TestCase {
      *
      * @param testName name of the test case
      */
-    public TestBundle(String testName) {
+    public TestImageBundle(String testName) {
         super(testName);
     }
 
@@ -40,7 +38,7 @@ public class TestBundle extends TestCase {
      * @return the suite of tests being tested
      */
     public static Test suite() {
-        return new TestSuite(TestBundle.class);
+        return new TestSuite(TestImageBundle.class);
     }
 
     public void testDisassemble() throws IOException {
