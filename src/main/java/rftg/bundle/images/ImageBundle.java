@@ -1,4 +1,4 @@
-package rftg.bundle;
+package rftg.bundle.images;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -9,24 +9,29 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Bundle {
-
-    Map<Integer, BufferedImage> cardsCache = new HashMap<Integer, BufferedImage>();
+public class ImageBundle {
+    Map<ImageType, ImageCache> cacheMap = new HashMap<ImageType, ImageCache>();
     private String bundleName;
 
-    public Bundle(String bundleName) {
+    public ImageBundle(String bundleName) {
         this.bundleName = bundleName;
+        initializeCache();
+    }
+
+    private void initializeCache() {
+        ImageType[] values = ImageType.values();
+        for (ImageType value : values) {
+            cacheMap.put(value, new ImageCache());
+        }
     }
 
     public void load() {
-        Loader loader = new Loader();
-        loader.load(bundleName, new Loader.LoadCallback() {
+        ImageLoader loader = new ImageLoader();
+        loader.load(bundleName, new ImageLoader.LoadCallback() {
             public void execute(ImageType type, int index, byte[] imageData) {
                 try {
-                    if (type == ImageType.CARDS) {
-                        BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(imageData));
-                        cardsCache.put(index, bufferedImage);
-                    }
+                    BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(imageData));
+                    cacheMap.get(type).put(index, bufferedImage);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -43,8 +48,8 @@ public class Bundle {
         ensureDirectory(outputDir + "/icons");
 
 
-        Loader loader = new Loader();
-        loader.load(bundleName, new Loader.LoadCallback() {
+        ImageLoader loader = new ImageLoader();
+        loader.load(bundleName, new ImageLoader.LoadCallback() {
             public void execute(ImageType dir, int index, byte[] imageData) {
                 String filename = outputDir + "/" + dir.getName() + "/" + dir.getName() + "-" + index + ".jpg";
                 try {
@@ -66,10 +71,30 @@ public class Bundle {
     }
 
     public BufferedImage getCard(int index) {
-        return cardsCache.get(index);
+        return getFromCache(ImageType.CARDS, index);
     }
 
-    public int cardCount() {
-        return cardsCache.size();
+    public BufferedImage getAction(int index) {
+        return getFromCache(ImageType.ACTIONS, index);
+    }
+
+    public BufferedImage getCardBack() {
+        return getFromCache(ImageType.CARDBACK, 0);
+    }
+
+    public BufferedImage getGoal(int index) {
+        return getFromCache(ImageType.GOALS, index);
+    }
+
+    public BufferedImage getIcon(int index) {
+        return getFromCache(ImageType.ICONS, index);
+    }
+
+    private BufferedImage getFromCache(ImageType type, int index) {
+        return cacheMap.get(type).get(index);
+    }
+
+    public int count(ImageType type) {
+        return cacheMap.get(type).size();
     }
 }
