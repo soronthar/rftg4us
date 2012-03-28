@@ -1,9 +1,9 @@
 package rftg.game;
 
 public class Constants {
-    /*
-    * Maximum number of players.
-    */
+    /**
+     * Maximum number of players.
+     */
     public static final int MAX_PLAYER = 6;
 
     /*
