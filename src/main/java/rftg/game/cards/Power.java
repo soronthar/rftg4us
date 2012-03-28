@@ -1,6 +1,6 @@
 package rftg.game.cards;
 
-import rftg.bundle.cards.powers.SettlePowers;
+import rftg.bundle.cards.powers.*;
 
 public class Power {
     public int phase;
@@ -8,7 +8,26 @@ public class Power {
     public int value;
     public int times;
 
-    public boolean hasFlag(SettlePowers power) {
-        return (code & power.getValue()) == power.getValue();
+    public boolean hasFlag(Enum power) {
+        long value = -1;
+        switch (phase) {
+            case 1:
+                value = ((ExplorePowers) power).getValue();
+                break;
+            case 2:
+                value = ((DevelopPowers) power).getValue();
+                break;
+            case 3:
+                value = ((SettlePowers) power).getValue();
+                break;
+            case 4:
+                value = ((ConsumePowers) power).getValue();
+                break;
+            case 5:
+                value = ((ProducePowers) power).getValue();
+                break;
+
+        }
+        return (code & value) == value;
     }
 }

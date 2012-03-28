@@ -20,7 +20,8 @@ public enum Flags {
     DISCARD_TO_12(Constants.FLAG_DISCARD_TO_12),
     GAME_END_14(Constants.FLAG_GAME_END_14),
     TAKE_DISCARDS(Constants.FLAG_TAKE_DISCARDS),
-    SELECT_LAST(Constants.FLAG_SELECT_LAST);
+    SELECT_LAST(Constants.FLAG_SELECT_LAST),
+    NONE(0);
 
     private int value;
 

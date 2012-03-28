@@ -12,14 +12,13 @@ public class Design {
     public int cost;
     public int vp;
     public int[] expand = new int[MAX_EXPANSION];
-    public GoodType good_type;
+    public GoodType good_type = GoodType.NONE;
     public int flags;
     public int dup;
     public int num_power = 0;
     public Power[] powers = new Power[MAX_POWER];
 
-    public int num_vp_bonus;
-
+    public int num_vp_bonus = 0;
     public VPBonus[] bonuses = new VPBonus[MAX_VP_BONUS];
 
     public Design(int index, String name) {
