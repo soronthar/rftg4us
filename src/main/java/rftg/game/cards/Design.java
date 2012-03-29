@@ -26,7 +26,11 @@ public class Design {
         this.index = index;
     }
 
-    public boolean hasFlag(Flags flag) {
-        return (this.flags & flag.getValue()) == flag.getValue();
+    public boolean hasFlag(Flags... flags) {
+        boolean result = true;
+        for (Flags flag : flags) {
+            result = result && (this.flags & flag.getValue()) == flag.getValue();
+        }
+        return result;
     }
 }

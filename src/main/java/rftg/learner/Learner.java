@@ -1,6 +1,5 @@
 package rftg.learner;
 
-import rftg.bundle.cards.CardsDesigns;
 import rftg.game.Engine;
 import rftg.game.Game;
 import rftg.game.Player;
@@ -19,11 +18,10 @@ public class Learner {
         double factor = 1.0;
         int n = 20;
 
-        game.randomSeed = 1;
-//        game.randomSeed=System.currentTimeMillis();
+        game.random_seed = 1332996790248L;
+//        game.random_seed=System.currentTimeMillis();
 
-        CardsDesigns designs = new CardsDesigns();
-        designs.loadFrom("cards.txt");
+        game.designs.loadFrom("cards.txt");
 //TODO: use a proper library for CLI parsing.
         for (int i = 1; i < args.length; i++) {
             String arg = args[i];
@@ -42,26 +40,26 @@ public class Learner {
                 n = Integer.parseInt(args[i]);
             } else if ("-r".equals(arg)) {
                 i++;
-                game.randomSeed = Integer.parseInt(args[i]);
+                game.random_seed = Integer.parseInt(args[i]);
             } else if ("-f".equals(arg)) {
                 factor = Integer.parseInt(args[i]);
             }
         }
-        game.playerCount = num_players;
+        game.num_players = num_players;
 
-        game.expansionLevel = expansion;
+        game.expanded = expansion;
 
         game.advanced = advanced;
 
         /* Assume no options disabled */
-        game.goalDisabled = false; //TODO: flip this madness...
-        game.takeoverDisabled = false;
+        game.goal_disabled = false; //TODO: flip this madness...
+        game.takeover_disabled = false;
 
         game.initPlayers();
 
         /* Call initialization functions */
         for (int i = 0; i < num_players; i++) {
-            Player player = game.players[i];
+            Player player = game.p[i];
             /* Set player name */
             player.name = "Player " + i;
 
@@ -93,7 +91,7 @@ public class Learner {
             /* Print result */
             for (int j = 0; j < num_players; j++) {
                 /* Print score */
-                Player player = game.players[j];
+                Player player = game.p[j];
                 System.out.printf("%s: %d\n", player.name, player.end_vp);
             }
 
@@ -102,7 +100,7 @@ public class Learner {
 
             /* Call player game over functions */
             for (int j = 0; j < num_players; j++) {
-                Player player = game.players[j];
+                Player player = game.p[j];
 
                 /* Call game over function */
                 player.control.game_over(game, j);
@@ -116,7 +114,7 @@ public class Learner {
         /* Call interface shutdown functions */
         for (int i = 0; i < num_players; i++) {
             /* Call shutdown function */
-            game.players[i].control.shutdown(game, i);
+            game.p[i].control.shutdown(game, i);
         }
     }
 

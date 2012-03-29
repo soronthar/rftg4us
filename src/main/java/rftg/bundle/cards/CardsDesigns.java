@@ -147,15 +147,16 @@ public class CardsDesigns {
 
     /**
      * Returns a Design given its index. if index out of range, returns null.
+     *
      * @param index
      * @return Design for given index or null if index out of bound.
      */
     public Design get(int index) {
-    	return (0 <= index && index < designCount-1) ? designs[index] : null;
+        return (0 <= index && index < designCount) ? designs[index] : null;
     }
-    
+
     public Design[] getCache() {
-    	//(LAPP) speed up things creating a DesignPile
-    	return designs;
+        //(LAPP) speed up things creating a DesignPile
+        return designs;
     }
 }

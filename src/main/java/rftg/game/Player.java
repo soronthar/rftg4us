@@ -48,7 +48,7 @@ public class Player {
     int end_discard;
 
     /* Goal cards claimed */
-    int[] goal_claimed = new int[MAX_GOAL];
+    boolean[] goal_claimed = new boolean[MAX_GOAL];
 
     /* Progress toward each goal */
     int[] goal_progress = new int[MAX_GOAL];
