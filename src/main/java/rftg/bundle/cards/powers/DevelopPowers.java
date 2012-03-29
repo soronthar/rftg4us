@@ -2,7 +2,7 @@ package rftg.bundle.cards.powers;
 
 import rftg.game.Constants;
 
-public enum DevelopPowers {
+public enum DevelopPowers implements PowersInterface {
     DRAW(Constants.P2_DRAW),
     REDUCE(Constants.P2_REDUCE),
     DRAW_AFTER(Constants.P2_DRAW_AFTER),

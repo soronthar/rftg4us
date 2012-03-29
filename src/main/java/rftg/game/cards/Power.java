@@ -8,7 +8,8 @@ public class Power {
     public int value;
     public int times;
 
-    public boolean hasFlag(Enum power) {
+    //(LAPP) adding interface to fix warning of using anonymous Enum type
+    public boolean hasFlag(PowersInterface power) {
         long value = -1;
         switch (phase) {
             case 1:

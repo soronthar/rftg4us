@@ -2,7 +2,7 @@ package rftg.bundle.cards.powers;
 
 import rftg.game.Constants;
 
-public enum ProducePowers {
+public enum ProducePowers implements PowersInterface {
     PRODUCE(Constants.P5_PRODUCE),
     WINDFALL_ANY(Constants.P5_WINDFALL_ANY),
     WINDFALL_NOVELTY(Constants.P5_WINDFALL_NOVELTY),

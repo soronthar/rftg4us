@@ -2,7 +2,7 @@ package rftg.bundle.cards.powers;
 
 import rftg.game.Constants;
 
-public enum SettlePowers {
+public enum SettlePowers implements PowersInterface {
     REDUCE(Constants.P3_REDUCE),
     NOVELTY(Constants.P3_NOVELTY),
     RARE(Constants.P3_RARE),

@@ -2,7 +2,7 @@ package rftg.bundle.cards.powers;
 
 import rftg.game.Constants;
 
-public enum ConsumePowers {
+public enum ConsumePowers implements PowersInterface {
     TRADE_ANY(Constants.P4_TRADE_ANY),
     TRADE_NOVELTY(Constants.P4_TRADE_NOVELTY),
     TRADE_RARE(Constants.P4_TRADE_RARE),
