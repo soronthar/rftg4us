@@ -14,9 +14,11 @@ public class Learner {
         GameConf conf = parser.parse(args);
         Game game = new Game(conf);
 
-        Engine engine = new Engine();
+
         /* Play a number of games */
         for (int i = 0; i < conf.n; i++) {
+            Engine engine = new Engine();
+
             /* Initialize game */
             engine.init_game(game);
 

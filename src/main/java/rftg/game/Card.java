@@ -16,19 +16,19 @@ public class Card {
     int start_where;
 
     /* Card is being placed and is not yet paid for */
-    int unpaid;
+    boolean unpaid;
 
     /* Bitmask of players who know card's location */
     int known;
 
     /* Card powers which have been used */
-    boolean[] used = new boolean[Constants.MAX_POWER];
+    boolean[] used;
 
     /* Card has produced this phase */
-    int produced;
+    boolean produced;
 
     /* Card design */
-    Design d_ptr;
+    Design design;
 
     /* Card covering us (as a good) */
     int covered;

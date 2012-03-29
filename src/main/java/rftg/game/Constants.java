@@ -394,4 +394,5 @@ public class Constants {
     public static final int CHOICE_SEARCH_KEEP = 23;
     public static final int CHOICE_OORT_KIND = 24;
 
+    public static final int VP_SHIPS_PER_PLAYER = 12;
 }

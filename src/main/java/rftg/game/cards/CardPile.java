@@ -17,13 +17,6 @@ public class CardPile {
         return pile.iterator();
     }
 
-    public synchronized void load(Card[] designs) {
-        if (designs != null && designs.length > 0) {
-            pile.clear();
-            pile = Arrays.asList(designs);
-        }
-    }
-
     public synchronized void shuffle() {
         Collections.shuffle(pile);
     }
@@ -76,5 +69,17 @@ public class CardPile {
      */
     public synchronized void appendDesigns(Collection<Card> more) {
         pile.addAll(more);
+    }
+
+    public void add(Card card) {
+        this.pile.add(card);
+    }
+
+    public int size() {
+        return this.pile.size();
+    }
+
+    public Card[] getCards() {
+        return pile.toArray(new Card[pile.size()]);
     }
 }

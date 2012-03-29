@@ -4,7 +4,6 @@ import rftg.bundle.cards.Flags;
 import rftg.bundle.cards.GoodType;
 import rftg.bundle.cards.powers.ConsumePowers;
 import rftg.bundle.cards.powers.SettlePowers;
-import rftg.game.cards.Design;
 import rftg.game.cards.Power;
 
 import static rftg.bundle.cards.Flags.*;
@@ -16,282 +15,41 @@ public class Engine {
     }
 
     public void init_game(Game g) {
-        Player p_ptr;
-        Design d_ptr;
-        Card c_ptr;
-        int[] goal = new int[MAX_GOAL];
-        int i, j, k, n;
-
-        /* Save current random seed */
-        g.start_seed = g.random_seed;
-
-        message_add("start seed: %d\n", g.start_seed);
-
-        /* Game is not simulated */
-        g.simulation = false;
-
-        /* Set size of VP pool */
-        g.vp_pool = g.getNumPlayers() * 12;
-
-        /* Increase size of pool in third expansion */
-        if (g.expanded >= 3) g.vp_pool += 5;
-
-        /* First game round */
-        g.round = 1;
-
-        /* No phase or turn */
-        g.cur_action = -1;
-        g.turn = 0;
-
-        /* Clear selected actions */
-        for (i = 0; i < MAX_ACTION; i++) g.action_selected[i] = 0;
-
-        /* Game is not over */
-        g.game_over = false;
-
-        /* Clear goals */
-        for (i = 0; i < MAX_GOAL; i++) {
-            /* Goal is not active */
-            g.goal_active[i] = false;
-
-            /* Goal is not available */
-            g.goal_avail[i] = false;
-        }
-
-        /* Clear number of pending takeovers */
-        g.num_takeover = 0;
-
-        /* Set Oort Cloud kind to "any" */
-        g.oort_kind = GOOD_ANY;
-
-
-        /* No cards in deck yet */
-        g.deck_size = 0;
-
-        /* Loop over card designs */
-        for (i = 0; i < MAX_DESIGN; i++) {
-            /* Get design pointer */
-            d_ptr = g.designs.get(i);
-
-            /* Get number of cards in use */
-            n = d_ptr.expand[g.expanded];
-
-            /* Add cards */
-            for (j = 0; j < n; j++) {
-                /* Get card pointer */
-                c_ptr = new Card();
-
-                /* No owner */
-                c_ptr.start_owner = c_ptr.owner = -1;
-
-                /* Put location in draw deck */
-                c_ptr.start_where = c_ptr.where = WHERE_DECK;
-
-                /* Card is not unpaid */
-                c_ptr.unpaid = 0;
-
-                /* Card's location is not known */
-                c_ptr.known = 0;
-
-                /* Clear used power list */
-                for (k = 0; k < MAX_POWER; k++) c_ptr.used[k] = false;
-
-                /* Card has not produced */
-                c_ptr.produced = 0;
-
-                /* Set card's design */
-                c_ptr.d_ptr = d_ptr;
-
-                /* Card is not covered by a good */
-                c_ptr.covered = -1;
-
-                /* Card is not followed by any other */
-                c_ptr.next = -1;
-
-                g.deck[g.deck_size] = c_ptr;
-                g.deck_size++;
-            }
-        }
-
-        /* Add goals when expanded */
-        if (g.expanded > 0 && !g.goal_disabled) {
-            /* No goals available yet */
-            n = 0;
-
-            /* Use correct "first" goals */
-            if (g.expanded == 1) {
-                /* First expansion only */
-                j = GOAL_FIRST_5_VP;
-                k = GOAL_FIRST_SIX_DEVEL;
-            } else if (g.expanded == 2) {
-                /* First and second expansion */
-                j = GOAL_FIRST_5_VP;
-                k = GOAL_FIRST_8_ACTIVE;
-            } else {
-                /* All expansions */
-                j = GOAL_FIRST_5_VP;
-                k = GOAL_FIRST_4_MILITARY;
-            }
-
-            /* Add "first" goals to list */
-            for (i = j; i <= k; i++) {
-                /* Add goal to list */
-                goal[n++] = i;
-            }
-
-            /* Select four "first" goals at random */
-            for (i = 0; i < 4; i++) {
-                /* Choose goal at random */
-
-                j = g.game_rand() % n;
-
-                /* Goal is active */
-                g.goal_active[goal[j]] = true;
-
-                /* Goal is available */
-                g.goal_avail[goal[j]] = true;
-
-                /* Remove chosen goal from list */
-                goal[j] = goal[--n];
-            }
-
-            /* No goals available yet */
-            n = 0;
-
-            /* Use correct "most" goals */
-            if (g.expanded == 1) {
-                /* First expansion only */
-                j = GOAL_MOST_MILITARY;
-                k = GOAL_MOST_PRODUCTION;
-            } else if (g.expanded == 2) {
-                /* First and second expansion */
-                j = GOAL_MOST_MILITARY;
-                k = GOAL_MOST_REBEL;
-            } else {
-                /* All expansions */
-                j = GOAL_MOST_MILITARY;
-                k = GOAL_MOST_CONSUME;
-            }
-
-            /* Add "most" goals to list */
-            for (i = j; i <= k; i++) {
-                /* Add goal to list */
-                goal[n++] = i;
-            }
-
-            /* Select two "most" goals at random */
-            for (i = 0; i < 2; i++) {
-                /* Choose goal at random */
-                j = g.game_rand() % n;
-
-                /* Goal is active */
-                g.goal_active[goal[j]] = true;
-
-                /* Goal is available */
-                g.goal_avail[goal[j]] = true;
-
-                /* Remove chosen goal from list */
-                goal[j] = goal[--n];
-            }
-        }
-
-        /* Loop over players */
-        for (i = 0; i < g.getNumPlayers(); i++) {
-            /* Get player pointer */
-            p_ptr = g.getPlayer(i);
-
-            /* Clear all claimed goals */
-            for (j = 0; j < MAX_GOAL; j++) {
-                /* Goal is unclaimed */
-                p_ptr.goal_claimed[j] = false;
-
-                /* No progress toward goal */
-                p_ptr.goal_progress[j] = 0;
-            }
-
-            /* Player has no actions chosen */
-            p_ptr.action[0] = p_ptr.prev_action[0] = -1;
-            p_ptr.action[1] = p_ptr.prev_action[1] = -1;
-
-            /* Player has not used prestige/search action */
-            p_ptr.prestige_action_used = 0;
-
-            /* Player has not used phase bonus */
-            p_ptr.phase_bonus_used = 0;
-
-            /* Player has no card to be placed */
-            p_ptr.placing = -1;
-
-            /* Player has no cards in any area */
-            for (j = 0; j < MAX_WHERE; j++) {
-                /* Clear list head */
-                p_ptr.head[j] = -1;
-                p_ptr.start_head[j] = -1;
-            }
-
-            /* Player has no bonus military accrued */
-            p_ptr.bonus_military = 0;
-
-            /* Player has no bonus settle discount */
-            p_ptr.bonus_reduce = 0;
-
-            /* Player has not discarded any end of turn cards */
-            p_ptr.end_discard = 0;
-
-            /* No cards played yet */
-            p_ptr.table_order = 0;
-
-            /* Player has no prestige */
-            p_ptr.prestige = p_ptr.prestige_turn = 0;
-
-            /* Player has no points */
-            p_ptr.vp = p_ptr.goal_vp = p_ptr.end_vp = 0;
-
-            /* Player is not the winner */
-            p_ptr.winner = 0;
-
-            /* Player has earned no rewards this phase */
-            p_ptr.phase_cards = p_ptr.phase_vp = 0;
-            p_ptr.phase_prestige = 0;
-
-            /* Player has no fake cards */
-            p_ptr.fake_hand = p_ptr.total_fake = 0;
-            p_ptr.fake_discards = 0;
-        }
-
+        g.init();
     }
 
     public void begin_game(Game g) {
-        Card c_ptr;
+        Card card;
         int[] start = new int[MAX_DECK];
         int[] start_red = new int[MAX_DECK];
         int[] start_blue = new int[MAX_DECK];
         int[][] start_picks = new int[MAX_PLAYER][2];
         int[] hand = new int[MAX_DECK];
         boolean[] discarding = new boolean[MAX_PLAYER];
-        int i = 0, j = 0, n = 0, ns = 0;
+        int n = 0, ns = 0;
         int lowest = MAX_DECK, low_i = -1;
         int num_start = 0, num_start_red = 0, num_start_blue = 0;
 
+
         /* Loop over cards in deck */
-        for (i = 0; i < g.deck_size; i++) {
+        for (int i = 0; i < g.getDeckSize(); i++) {
             /* Get card pointer */
-            c_ptr = g.deck[i];
+            card = g.getDeck()[i];
 
             /* Check for start world */
-            if (c_ptr.d_ptr.hasFlag(Flags.START)) {
+            if (card.design.hasFlag(Flags.START)) {
                 /* Add to list */
                 start[num_start++] = i;
             }
 
             /* Check for red start world */
-            if (c_ptr.d_ptr.hasFlag(Flags.START_RED)) {
+            if (card.design.hasFlag(Flags.START_RED)) {
                 /* Add to list */
                 start_red[num_start_red++] = i;
             }
 
             /* Check for blue start world */
-            if (c_ptr.d_ptr.hasFlag(Flags.START_BLUE)) {
+            if (card.design.hasFlag(Flags.START_BLUE)) {
                 /* Add to list */
                 start_blue[num_start_blue++] = i;
             }
@@ -300,7 +58,7 @@ public class Engine {
         /* Check for second (or later) expansion */
         if (g.expanded >= 2) {
             /* Loop over players */
-            for (i = 0; i < g.getNumPlayers(); i++) {
+            for (int i = 0; i < g.getNumPlayers(); i++) {
                 /* Choose a Red start world */
                 n = g.game_rand() % num_start_red;
 
@@ -320,20 +78,20 @@ public class Engine {
                 start_blue[n] = start_blue[--num_start_blue];
 
                 /* Get card pointer to first start choice */
-                c_ptr = g.deck[start_picks[i][0]];
+                card = g.getDeck()[start_picks[i][0]];
 
                 /* XXX Move card to discard */
-                c_ptr.where = WHERE_DISCARD;
+                card.where = WHERE_DISCARD;
 
                 /* Get card pointer to second start choice */
-                c_ptr = g.deck[start_picks[i][1]];
+                card = g.getDeck()[start_picks[i][1]];
 
                 /* XXX Move card to discard */
-                c_ptr.where = WHERE_DISCARD;
+                card.where = WHERE_DISCARD;
             }
 
             /* Loop over players again */
-            for (i = 0; i < g.getNumPlayers(); i++) {
+            for (int i = 0; i < g.getNumPlayers(); i++) {
                 /* Get player pointer */
 
 
@@ -344,15 +102,15 @@ public class Engine {
                 n = 0;
 
                 /* Loop over cards */
-                for (j = 0; j < g.deck_size; j++) {
+                for (int j = 0; j < g.getDeckSize(); j++) {
                     /* Get card pointer */
-                    c_ptr = g.deck[j];
+                    card = g.getDeck()[j];
 
                     /* Skip unowned cards */
-                    if (c_ptr.owner != i) continue;
+                    if (card.owner != i) continue;
 
                     /* Skip cards not in hand */
-                    if (c_ptr.where != WHERE_HAND) continue;
+                    if (card.where != WHERE_HAND) continue;
 
                     /* Add card to list */
                     hand[n++] = j;
@@ -373,7 +131,7 @@ public class Engine {
             wait_for_all(g);
 
             /* Loop over players */
-            for (i = 0; i < g.getNumPlayers(); i++) {
+            for (int i = 0; i < g.getNumPlayers(); i++) {
                 /* Get answer */
                 extract_choice(g, i, CHOICE_START, hand, n,
                         start_picks[i], ns);
@@ -383,16 +141,16 @@ public class Engine {
             }
         } else {
             /* Loop over start worlds */
-            for (i = 0; i < num_start; i++) {
+            for (int i = 0; i < num_start; i++) {
                 /* Get card pointer for start world */
-                c_ptr = g.deck[start[i]];
+                card = g.getDeck()[start[i]];
 
                 /* Temporarily move card to discard pile */
-                c_ptr.where = WHERE_DISCARD;
+                card.where = WHERE_DISCARD;
             }
 
             /* Loop over players */
-            for (i = 0; i < g.getNumPlayers(); i++) {
+            for (int i = 0; i < g.getNumPlayers(); i++) {
                 /* Choose a start world number */
                 n = g.game_rand() % num_start;
 
@@ -407,23 +165,23 @@ public class Engine {
             }
 
             /* Loop over start worlds */
-            for (i = 0; i < num_start; i++) {
+            for (int i = 0; i < num_start; i++) {
                 /* Get card pointer for start world */
-                c_ptr = g.deck[start[i]];
+                card = g.getDeck()[start[i]];
 
                 /* Move card back to deck */
-                c_ptr.where = WHERE_DECK;
+                card.where = WHERE_DECK;
             }
 
             /* Loop over players again */
-            for (i = 0; i < g.getNumPlayers(); i++) {
+            for (int i = 0; i < g.getNumPlayers(); i++) {
                 /* Give player six cards */
                 draw_cards(g, i, 6);
             }
         }
 
         /* Find lowest numbered start world */
-        for (i = 0; i < g.getNumPlayers(); i++) {
+        for (int i = 0; i < g.getNumPlayers(); i++) {
             /* Check for lower number */
             if (g.getPlayer(i).start < lowest) {
                 /* Remember lowest number */
@@ -433,33 +191,33 @@ public class Engine {
         }
 
         /* Rotate players until player 0 holds lowest start world */
-        for (i = 0; i < low_i; i++) rotate_players(g);
+        for (int i = 0; i < low_i; i++) rotate_players(g);
 
         /* Loop over players */
-        for (i = 0; i < g.getNumPlayers(); i++) {
+        for (int i = 0; i < g.getNumPlayers(); i++) {
 
             /* Get player's start world */
-            c_ptr = g.deck[g.getPlayer(i).start];
+            card = g.getDeck()[g.getPlayer(i).start];
 
             /* Send message */
-            message_add("%s starts with %s.\n", g.getPlayer(i).name, c_ptr.d_ptr.name);
+            message_add("%s starts with %s.\n", g.getPlayer(i).name, card.design.name);
         }
 
         /* Loop over players */
-        for (i = 0; i < g.getNumPlayers(); i++) {
+        for (int i = 0; i < g.getNumPlayers(); i++) {
 
 
             /* Get list of cards in hand */
             n = get_player_area(g, i, hand, WHERE_HAND);
 
             /* Assume player gets four cards */
-            j = 4;
+            int j = 4;
 
             /* Get player's start world */
-            c_ptr = g.deck[g.getPlayer(i).start];
+            card = g.getDeck()[g.getPlayer(i).start];
 
             /* Check for starting with less */
-            if (c_ptr.d_ptr.hasFlag(STARTHAND_3)) j = 3;
+            if (card.design.hasFlag(STARTHAND_3)) j = 3;
 
             /* Assume not discarding */
             discarding[i] = false;
@@ -481,7 +239,7 @@ public class Engine {
         wait_for_all(g);
 
         /* Loop over players */
-        for (i = 0; i < g.getNumPlayers(); i++) {
+        for (int i = 0; i < g.getNumPlayers(); i++) {
             /* Skip players who were not asked to discard */
             if (!discarding[i]) continue;
 
@@ -493,14 +251,14 @@ public class Engine {
         }
 
         /* Loop over players */
-        for (i = 0; i < g.getNumPlayers(); i++) {
+        for (int i = 0; i < g.getNumPlayers(); i++) {
 
 
             /* Get player's start world */
-            c_ptr = g.deck[g.getPlayer(i).start];
+            card = g.getDeck()[g.getPlayer(i).start];
 
             /* Check for starting with saved card */
-            if (c_ptr.d_ptr.hasFlag(START_SAVE)) {
+            if (card.design.hasFlag(START_SAVE)) {
                 /* Get cards in hand */
                 n = get_player_area(g, i, hand, WHERE_HAND);
 
@@ -544,7 +302,7 @@ public class Engine {
     */
     void draw_card(Game g, int who) {
         Player p_ptr;
-        Card c_ptr;
+        Card card;
         int which;
 
         /* Get player pointer */
@@ -565,10 +323,10 @@ public class Engine {
             if (which == -1) return;
 
             /* Get card pointer */
-            c_ptr = g.deck[which];
+            card = g.getDeck()[which];
 
             /* Move card to discard to simulate deck cycling */
-            c_ptr.where = WHERE_DISCARD;
+            card.where = WHERE_DISCARD;
 
             /* Done */
             return;
@@ -584,20 +342,18 @@ public class Engine {
         move_card(g, which, who, WHERE_HAND);
 
         /* Get card pointer */
-        c_ptr = g.deck[which];
+        card = g.getDeck()[which];
 
         /* Card's location is known to player */
-        c_ptr.known |= 1 << who;
+        card.known |= 1 << who;
     }
 
     /*
     * Draw a number of cards, as in draw_card() above.
     */
     void draw_cards(Game g, int who, int num) {
-        int i;
-
         /* Draw required number */
-        for (i = 0; i < num; i++) draw_card(g, who);
+        for (int i = 0; i < num; i++) draw_card(g, who);
     }
 
 
@@ -638,7 +394,7 @@ public class Engine {
     int extract_choice(Game g, int who, int type, int list[], int nl, int special[], int ns) {
         Player p_ptr;
         int l_ptr;
-        int rv, i, num;
+        int rv, num;
 
         /* Get player pointer */
         p_ptr = g.getPlayer(who);
@@ -672,7 +428,7 @@ public class Engine {
             nl = num;
 
             /* Copy list items */
-            for (i = 0; i < num; i++) {
+            for (int i = 0; i < num; i++) {
                 /* Copy item */
                 list[i] = p_ptr.choice_log[l_ptr++];
             }
@@ -693,7 +449,7 @@ public class Engine {
             ns = num;
 
             /* Copy special items */
-            for (i = 0; i < num; i++) {
+            for (int i = 0; i < num; i++) {
                 /* Copy item */
                 special[i] = p_ptr.choice_log[l_ptr++];
             }
@@ -716,17 +472,17 @@ public class Engine {
     * Called when a player has chosen a start world and initial discards.
     */
     int start_callback(Game g, int who, int list[], int n, int special[], int ns) {
-        Player p_ptr = g.getPlayer(who);
-        Card c_ptr;
+        Player player = g.getPlayer(who);
+        Card card;
 
         /* Ensure exactly one start world chosen */
         if (ns != 1) return 0;
 
         /* Remember start card */
-        p_ptr.start = special[0];
+        player.start = special[0];
 
         /* Get card pointer of start world */
-        c_ptr = g.deck[special[0]];
+        card = g.getDeck()[special[0]];
 
         /* Check for 2 cards discarded */
         if (n != 2) return 0;
@@ -746,37 +502,37 @@ public class Engine {
     */
     void place_card(Game g, int who, int which) {
         Player p_ptr;
-        Card c_ptr;
+        Card card;
 
         /* Get player pointer */
         p_ptr = g.getPlayer(who);
 
         /* Get card being placed */
-        c_ptr = g.deck[which];
+        card = g.getDeck()[which];
 
         /* Move card to player */
         move_card(g, which, who, WHERE_ACTIVE);
 
         /* Location is known to all */
-        c_ptr.known = ~0;
+        card.known = ~0;
 
         /* Count order played */
-        c_ptr.order = p_ptr.table_order++;
+        card.order = p_ptr.table_order++;
 
         /* Add a good to windfall worlds */
-        if (c_ptr.d_ptr.hasFlag(WINDFALL)) add_good(g, c_ptr);
+        if (card.design.hasFlag(WINDFALL)) add_good(g, card);
 
         /* Check for third expansion */
         if (g.expanded >= 3) {
             /* Check for prestige from card */
-            if (c_ptr.d_ptr.hasFlag(PRESTIGE)) {
+            if (card.design.hasFlag(PRESTIGE)) {
                 /* Add prestige to player */
                 gain_prestige(g, who, 1);
             }
         }
 
         /* Card is as-yet unpaid for */
-        c_ptr.unpaid = 1;
+        card.unpaid = true;
     }
 
 
@@ -788,47 +544,47 @@ public class Engine {
     */
     void rotate_players(Game g) {
         Player temp, p_ptr;
-        Card c_ptr;
-        int i, bit;
+        Card card;
+        int bit;
 
         /* Store copy of player 0 */
         temp = g.getPlayer(0);
 
         /* Loop over players */
-        for (i = 0; i < g.getNumPlayers() - 1; i++) {
+        for (int i = 0; i < g.getNumPlayers() - 1; i++) {
             /* Copy players one space */
             g.setPlayer(i, g.getPlayer(i + 1));
         }
 
         /* Store old player 0 in last spot */
-        g.setPlayer(i, temp);
+        g.setPlayer(g.getNumPlayers() - 1, temp);
 
         /* Loop over cards in deck */
-        for (i = 0; i < g.deck_size; i++) {
+        for (int i = 0; i < g.getDeckSize(); i++) {
             /* Get card pointer */
-            c_ptr = g.deck[i];
+            card = g.getDeck()[i];
 
             /* Skip cards owned by no one */
-            if (c_ptr.owner == -1) continue;
+            if (card.owner == -1) continue;
 
             /* Adjust owner */
-            c_ptr.owner--;
+            card.owner--;
 
             /* Check for wraparound */
-            if (c_ptr.owner < 0) c_ptr.owner = g.getNumPlayers() - 1;
+            if (card.owner < 0) card.owner = g.getNumPlayers() - 1;
 
             /* Track lowest bit of known */
-            bit = c_ptr.known & 1;
+            bit = card.known & 1;
 
             /* Adjust known bits */
-            c_ptr.known >>= 1;
+            card.known >>= 1;
 
             /* Rotate old lowest bit to highest position */
-            c_ptr.known |= bit << (g.getNumPlayers() - 1);
+            card.known |= bit << (g.getNumPlayers() - 1);
         }
 
         /* Loop over players */
-        for (i = 0; i < g.getNumPlayers(); i++) {
+        for (int i = 0; i < g.getNumPlayers(); i++) {
             /* Get player pointer */
             p_ptr = g.getPlayer(i);
 
@@ -847,7 +603,7 @@ public class Engine {
         x = g.getPlayer(who).head[where];
 
         /* Loop over cards */
-        for (; x != -1; x = g.deck[x].next) {
+        for (; x != -1; x = g.getDeck()[x].next) {
             /* Add card to list */
             list[n++] = x;
         }
@@ -912,35 +668,35 @@ public class Engine {
     */
     void move_card(Game g, int which, int owner, int where) {
         Player p_ptr;
-        Card c_ptr;
+        Card card;
         int x;
 
         /* Get card pointer */
-        c_ptr = g.deck[which];
+        card = g.getDeck()[which];
 
         /* Check for current owner */
-        if (c_ptr.owner != -1) {
+        if (card.owner != -1) {
             /* Get pointer of current owner */
-            p_ptr = g.getPlayer(c_ptr.owner);
+            p_ptr = g.getPlayer(card.owner);
 
             /* Find card in list */
-            x = p_ptr.head[c_ptr.where];
+            x = p_ptr.head[card.where];
 
             /* Check for beginning of list */
             if (x == which) {
                 /* Adjust list forward */
-                p_ptr.head[c_ptr.where] = c_ptr.next;
-                c_ptr.next = -1;
+                p_ptr.head[card.where] = card.next;
+                card.next = -1;
             } else {
                 /* Loop until moved card is found */
-                while (g.deck[x].next != which) {
+                while (g.getDeck()[x].next != which) {
                     /* Move forward */
-                    x = g.deck[x].next;
+                    x = g.getDeck()[x].next;
                 }
 
                 /* Remove moved card from list */
-                g.deck[x].next = c_ptr.next;
-                c_ptr.next = -1;
+                g.getDeck()[x].next = card.next;
+                card.next = -1;
             }
         }
 
@@ -950,13 +706,13 @@ public class Engine {
             p_ptr = g.getPlayer(owner);
 
             /* Add card to beginning of list */
-            c_ptr.next = p_ptr.head[where];
+            card.next = p_ptr.head[where];
             p_ptr.head[where] = which;
         }
 
         /* Adjust location */
-        c_ptr.owner = owner;
-        c_ptr.where = where;
+        card.owner = owner;
+        card.where = where;
     }
 
     /*
@@ -964,36 +720,36 @@ public class Engine {
  */
     void clear_temp(Game g) {
         Player p_ptr;
-        Card c_ptr;
-        int i, j;
+        Card card;
+
 
         /* Loop over cards */
-        for (i = 0; i < g.deck_size; i++) {
+        for (int i = 0; i < g.getDeckSize(); i++) {
             /* Get card pointer */
-            c_ptr = g.deck[i];
+            card = g.getDeck()[i];
 
             /* Copy current location */
-            c_ptr.start_owner = c_ptr.owner;
-            c_ptr.start_where = c_ptr.where;
+            card.start_owner = card.owner;
+            card.start_where = card.where;
 
             /* Copy next card */
-            c_ptr.start_next = c_ptr.next;
+            card.start_next = card.next;
 
             /* Clear unpaid flag */
-            c_ptr.unpaid = 0;
+            card.unpaid = false;
 
             /* Clear produced flag */
-            c_ptr.produced = 0;
+            card.produced = false;
 
             /* Loop over used flags */
-            for (j = 0; j < MAX_POWER; j++) {
+            for (int j = 0; j < MAX_POWER; j++) {
                 /* Clear flag */
-                c_ptr.used[j] = false;
+                card.used[j] = false;
             }
         }
 
         /* Loop over players */
-        for (i = 0; i < g.getNumPlayers(); i++) {
+        for (int i = 0; i < g.getNumPlayers(); i++) {
             /* Get player pointer */
             p_ptr = g.getPlayer(i);
 
@@ -1007,7 +763,7 @@ public class Engine {
             p_ptr.bonus_reduce = 0;
 
             /* Loop over location heads */
-            for (j = 0; j < MAX_WHERE; j++) {
+            for (int j = 0; j < MAX_WHERE; j++) {
                 /* Copy start of list */
                 p_ptr.start_head[j] = p_ptr.head[j];
             }
@@ -1021,11 +777,10 @@ public class Engine {
         Player p_ptr;
         int[] count = new int[MAX_PLAYER];
         boolean most;
-        int i, j, k;
-        String msg;
+
 
         /* Loop over "first" goals */
-        for (i = GOAL_FIRST_5_VP; i <= GOAL_FIRST_4_MILITARY; i++) {
+        for (int i = GOAL_FIRST_5_VP; i <= GOAL_FIRST_4_MILITARY; i++) {
             /* Skip inactive goals */
             if (!g.goal_active[i]) continue;
 
@@ -1096,7 +851,7 @@ public class Engine {
             }
 
             /* Loop over players */
-            for (j = 0; j < g.getNumPlayers(); j++) {
+            for (int j = 0; j < g.getNumPlayers(); j++) {
                 /* Get player pointer */
                 p_ptr = g.getPlayer(j);
 
@@ -1118,7 +873,7 @@ public class Engine {
         }
 
         /* Loop over "most" goals */
-        for (i = GOAL_MOST_MILITARY; i <= GOAL_MOST_CONSUME; i++) {
+        for (int i = GOAL_MOST_MILITARY; i <= GOAL_MOST_CONSUME; i++) {
             /* Skip inactive goals */
             if (!g.goal_active[i]) continue;
 
@@ -1163,7 +918,7 @@ public class Engine {
             g.goal_most[i] = 0;
 
             /* Loop over each player */
-            for (j = 0; j < g.getNumPlayers(); j++) {
+            for (int j = 0; j < g.getNumPlayers(); j++) {
                 /* Get player's progress */
                 count[j] = check_goal_player(g, i, j);
 
@@ -1181,7 +936,7 @@ public class Engine {
             }
 
             /* Check for losing goal */
-            for (j = 0; j < g.getNumPlayers(); j++) {
+            for (int j = 0; j < g.getNumPlayers(); j++) {
                 /* Get player pointer */
                 p_ptr = g.getPlayer(j);
 
@@ -1201,12 +956,12 @@ public class Engine {
             }
 
             /* Loop over players */
-            for (j = 0; j < g.getNumPlayers(); j++) {
+            for (int j = 0; j < g.getNumPlayers(); j++) {
                 /* Assume this player has most */
                 most = true;
 
                 /* Loop over opponents */
-                for (k = 0; k < g.getNumPlayers(); k++) {
+                for (int k = 0; k < g.getNumPlayers(); k++) {
                     /* Do not compete with ourself */
                     if (j == k) continue;
 
@@ -1223,7 +978,7 @@ public class Engine {
                     g.goal_avail[i] = false;
 
                     /* Loop over players */
-                    for (k = 0; k < g.getNumPlayers(); k++) {
+                    for (int k = 0; k < g.getNumPlayers(); k++) {
                         /* Get player pointer */
                         p_ptr = g.getPlayer(k);
 
@@ -1249,7 +1004,7 @@ public class Engine {
  * Return a card index from the draw deck.
  */
     int random_draw(Game g) {
-        int i, n;
+        int n;
 
         /* Count draw deck size */
         n = count_draw(g);
@@ -1273,23 +1028,27 @@ public class Engine {
         n = g.game_rand() % n;
 
         /* Loop over cards */
-        for (i = 0; i < g.deck_size; i++) {
+        int where = g.getDeckSize() - 1;
+        for (int i = 0; i < g.getDeckSize(); i++) {
             /* Skip cards not in draw deck */
-            if (g.deck[i].where != WHERE_DECK) continue;
+            if (g.getDeck()[i].where != WHERE_DECK) continue;
 
             /* Check for chosen card */
             n--;
-            if (n <= 0) break;
+            if (n <= 0) {
+                where = i;
+                break;
+            }
         }
 
         /* Clear chosen card's location */
-        g.deck[i].where = -1;
+        g.getDeck()[where].where = -1;
 
         /* Check for just-emptied draw pile */
         if (count_draw(g) != 0) refresh_draw(g);
 
         /* Return chosen card */
-        return i;
+        return where;
     }
 
     /*
@@ -1299,13 +1058,13 @@ public class Engine {
  */
     int check_goal_player(Game g, int goal, int who) {
         Player p_ptr;
-        Card c_ptr;
+        Card card;
         PowerWhere[] w_list = new PowerWhere[100];
         Power o_ptr;
         int[] good = new int[6];
         int[] phase = new int[6];
         int count = 0;
-        int i, x, n;
+        int x, n;
 
         /* Get player pointer */
         p_ptr = g.getPlayer(who);
@@ -1322,25 +1081,25 @@ public class Engine {
             case GOAL_FIRST_4_TYPES:
 
                 /* Clear good marks */
-                for (i = 0; i < 6; i++) good[i] = 0;
+                for (int i = 0; i < 6; i++) good[i] = 0;
 
                 /* Start at first active card */
                 x = p_ptr.head[WHERE_ACTIVE];
 
                 /* Loop over cards */
-                for (; x != -1; x = g.deck[x].next) {
+                for (; x != -1; x = g.getDeck()[x].next) {
                     /* Get card pointer */
-                    c_ptr = g.deck[x];
+                    card = g.getDeck()[x];
 
                     /* Skip non-worlds */
-                    if (c_ptr.d_ptr.type != TYPE_WORLD) continue;
+                    if (card.design.type != TYPE_WORLD) continue;
 
                     /* Mark good type */
-                    good[c_ptr.d_ptr.good_type.ordinal()] = 1;
+                    good[card.design.good_type.ordinal()] = 1;
                 }
 
                 /* Count types */
-                for (i = GOOD_ANY; i <= GOOD_ALIEN; i++) {
+                for (int i = GOOD_ANY; i <= GOOD_ALIEN; i++) {
                     /* Check for active type */
                     if (good[i] != 0) count++;
                 }
@@ -1367,20 +1126,20 @@ public class Engine {
             case GOAL_FIRST_PHASE_POWER:
 
                 /* Clear phase marks */
-                for (i = 0; i < 6; i++) phase[i] = 0;
+                for (int i = 0; i < 6; i++) phase[i] = 0;
 
                 /* Start at first active card */
                 x = p_ptr.head[WHERE_ACTIVE];
 
                 /* Loop over cards */
-                for (; x != -1; x = g.deck[x].next) {
+                for (; x != -1; x = g.getDeck()[x].next) {
                     /* Get card pointer */
-                    c_ptr = g.deck[x];
+                    card = g.getDeck()[x];
 
                     /* Loop over card powers */
-                    for (i = 0; i < c_ptr.d_ptr.num_power; i++) {
+                    for (int i = 0; i < card.design.num_power; i++) {
                         /* Get power pointer */
-                        o_ptr = c_ptr.d_ptr.powers[i];
+                        o_ptr = card.design.powers[i];
 
                         /* Check for trade power */
                         if (o_ptr.phase == PHASE_CONSUME &&
@@ -1395,7 +1154,7 @@ public class Engine {
                 }
 
                 /* Count phases with powers */
-                for (i = 0; i < 6; i++) {
+                for (int i = 0; i < 6; i++) {
                     /* Check for power */
                     if (phase[i] > 0) count++;
                 }
@@ -1410,18 +1169,18 @@ public class Engine {
                 x = p_ptr.head[WHERE_ACTIVE];
 
                 /* Loop over cards */
-                for (; x != -1; x = g.deck[x].next) {
+                for (; x != -1; x = g.getDeck()[x].next) {
                     /* Get card pointer */
-                    c_ptr = g.deck[x];
+                    card = g.getDeck()[x];
 
                     /* Skip worlds */
-                    if (c_ptr.d_ptr.type == TYPE_WORLD) continue;
+                    if (card.design.type == TYPE_WORLD) continue;
 
                     /* Skip non-cost-6 cards */
-                    if (c_ptr.d_ptr.cost != 6) continue;
+                    if (card.design.cost != 6) continue;
 
                     /* Check for variable points */
-                    if (c_ptr.d_ptr.num_vp_bonus > 0) return 1;
+                    if (card.design.num_vp_bonus > 0) return 1;
                 }
 
                 /* No six-cost developments */
@@ -1443,15 +1202,15 @@ public class Engine {
                 x = p_ptr.head[WHERE_ACTIVE];
 
                 /* Loop over cards */
-                for (; x != -1; x = g.deck[x].next) {
+                for (; x != -1; x = g.getDeck()[x].next) {
                     /* Get card pointer */
-                    c_ptr = g.deck[x];
+                    card = g.getDeck()[x];
 
                     /* Skip non-worlds */
-                    if (c_ptr.d_ptr.type != TYPE_WORLD) continue;
+                    if (card.design.type != TYPE_WORLD) continue;
 
                     /* Check for good */
-                    if (c_ptr.covered != -1) count++;
+                    if (card.covered != -1) count++;
                 }
 
                 /* Check for four goods */
@@ -1470,12 +1229,12 @@ public class Engine {
                 x = p_ptr.head[WHERE_ACTIVE];
 
                 /* Loop over cards */
-                for (; x != -1; x = g.deck[x].next) {
+                for (; x != -1; x = g.getDeck()[x].next) {
                     /* Get card pointer */
-                    c_ptr = g.deck[x];
+                    card = g.getDeck()[x];
 
                     /* Skip non-worlds */
-                    if (c_ptr.d_ptr.type != TYPE_WORLD) continue;
+                    if (card.design.type != TYPE_WORLD) continue;
 
                     /* Count active worlds */
                     count++;
@@ -1500,7 +1259,7 @@ public class Engine {
                 n = get_powers(g, who, PHASE_SETTLE, w_list);
 
                 /* Loop over powers */
-                for (i = 0; i < n; i++) {
+                for (int i = 0; i < n; i++) {
                     /* Get power pointer */
                     o_ptr = w_list[i].o_ptr;
 
@@ -1543,22 +1302,22 @@ public class Engine {
                 x = p_ptr.head[WHERE_ACTIVE];
 
                 /* Loop over cards */
-                for (; x != -1; x = g.deck[x].next) {
+                for (; x != -1; x = g.getDeck()[x].next) {
                     /* Get card pointer */
-                    c_ptr = g.deck[x];
+                    card = g.getDeck()[x];
 
                     /* Skip non-worlds */
-                    if (c_ptr.d_ptr.type != TYPE_WORLD) continue;
+                    if (card.design.type != TYPE_WORLD) continue;
 
                     /* Check for blue or brown */
-                    if (c_ptr.d_ptr.good_type == GoodType.NOVELTY ||
-                            c_ptr.d_ptr.good_type == GoodType.RARE) {
+                    if (card.design.good_type == GoodType.NOVELTY ||
+                            card.design.good_type == GoodType.RARE) {
                         /* Count world */
                         count++;
                     }
 
                     /* Check for "any" kind */
-                    if (c_ptr.d_ptr.good_type == GoodType.ANY &&
+                    if (card.design.good_type == GoodType.ANY &&
                             (g.oort_kind == GOOD_ANY ||
                                     g.oort_kind == GOOD_NOVELTY ||
                                     g.oort_kind == GOOD_RARE)) {
@@ -1577,12 +1336,12 @@ public class Engine {
                 x = p_ptr.head[WHERE_ACTIVE];
 
                 /* Loop over cards */
-                for (; x != -1; x = g.deck[x].next) {
+                for (; x != -1; x = g.getDeck()[x].next) {
                     /* Get card pointer */
-                    c_ptr = g.deck[x];
+                    card = g.getDeck()[x];
 
                     /* Skip worlds */
-                    if (c_ptr.d_ptr.type == TYPE_WORLD) continue;
+                    if (card.design.type == TYPE_WORLD) continue;
 
                     /* Count developments */
                     count++;
@@ -1598,19 +1357,19 @@ public class Engine {
                 x = p_ptr.head[WHERE_ACTIVE];
 
                 /* Loop over cards */
-                for (; x != -1; x = g.deck[x].next) {
+                for (; x != -1; x = g.getDeck()[x].next) {
                     /* Get card pointer */
-                    c_ptr = g.deck[x];
+                    card = g.getDeck()[x];
 
                     /* Skip non-worlds */
-                    if (c_ptr.d_ptr.type != TYPE_WORLD) continue;
+                    if (card.design.type != TYPE_WORLD) continue;
 
                     /* Skip windfall worlds */
-                    if (c_ptr.d_ptr.hasFlag(WINDFALL))
+                    if (card.design.hasFlag(WINDFALL))
                         continue;
 
                     /* Skip worlds with no good type */
-                    if (c_ptr.d_ptr.good_type == GoodType.NONE) continue;
+                    if (card.design.good_type == GoodType.NONE) continue;
 
                     /* Count world */
                     count++;
@@ -1626,14 +1385,14 @@ public class Engine {
                 x = p_ptr.head[WHERE_ACTIVE];
 
                 /* Loop over cards */
-                for (; x != -1; x = g.deck[x].next) {
+                for (; x != -1; x = g.getDeck()[x].next) {
                     /* Get card pointer */
-                    c_ptr = g.deck[x];
+                    card = g.getDeck()[x];
 
                     /* Loop over card powers */
-                    for (i = 0; i < c_ptr.d_ptr.num_power; i++) {
+                    for (int i = 0; i < card.design.num_power; i++) {
                         /* Get power pointer */
-                        o_ptr = c_ptr.d_ptr.powers[i];
+                        o_ptr = card.design.powers[i];
 
                         /* Check for explore phase */
                         if (o_ptr.phase == PHASE_EXPLORE) {
@@ -1668,14 +1427,14 @@ public class Engine {
                 x = p_ptr.head[WHERE_ACTIVE];
 
                 /* Loop over cards */
-                for (; x != -1; x = g.deck[x].next) {
+                for (; x != -1; x = g.getDeck()[x].next) {
                     /* Get card pointer */
-                    c_ptr = g.deck[x];
+                    card = g.getDeck()[x];
 
                     /* Loop over card powers */
-                    for (i = 0; i < c_ptr.d_ptr.num_power; i++) {
+                    for (int i = 0; i < card.design.num_power; i++) {
                         /* Get power pointer */
-                        o_ptr = c_ptr.d_ptr.powers[i];
+                        o_ptr = card.design.powers[i];
 
                         /* Check for consume phase */
                         if (o_ptr.phase == PHASE_CONSUME) {
@@ -1741,16 +1500,16 @@ public class Engine {
     * Return the number of cards in the draw deck.
     */
     int count_draw(Game g) {
-        Card c_ptr;
-        int i, n = 0;
+        Card card;
+        int n = 0;
 
         /* Loop over cards */
-        for (i = 0; i < g.deck_size; i++) {
+        for (int i = 0; i < g.getDeckSize(); i++) {
             /* Get card pointer */
-            c_ptr = g.deck[i];
+            card = g.getDeck()[i];
 
             /* Count cards in draw deck */
-            if (c_ptr.where == WHERE_DECK) n++;
+            if (card.where == WHERE_DECK) n++;
         }
 
         /* Return count */
@@ -1761,8 +1520,7 @@ public class Engine {
     * Refresh the draw deck.
     */
     void refresh_draw(Game g) {
-        Card c_ptr;
-        int i;
+        Card card;
 
         /* Message */
         if (!g.simulation) {
@@ -1771,18 +1529,18 @@ public class Engine {
         }
 
         /* Loop over cards */
-        for (i = 0; i < g.deck_size; i++) {
+        for (int i = 0; i < g.getDeckSize(); i++) {
             /* Get card pointer */
-            c_ptr = g.deck[i];
+            card = g.getDeck()[i];
 
             /* Skip cards not in discard pile */
-            if (c_ptr.where != WHERE_DISCARD) continue;
+            if (card.where != WHERE_DISCARD) continue;
 
             /* Move card to draw deck */
-            c_ptr.where = WHERE_DECK;
+            card.where = WHERE_DECK;
 
             /* Card's location is no longer known to anyone */
-            c_ptr.known = 0;
+            card.known = 0;
         }
     }
 
@@ -1798,9 +1556,9 @@ public class Engine {
         x = g.getPlayer(who).start_head[WHERE_ACTIVE];
 
         /* Loop over cards */
-        for (; x != -1; x = g.deck[x].start_next) {
+        for (; x != -1; x = g.getDeck()[x].start_next) {
             /* Check for correct flags */
-            if (g.deck[x].d_ptr.hasFlag(flags)) count++;
+            if (g.getDeck()[x].design.hasFlag(flags)) count++;
         }
 
         /* Return count */
@@ -1817,7 +1575,7 @@ public class Engine {
         x = g.getPlayer(who).head[where];
 
         /* Loop until end of list */
-        for (; x != -1; x = g.deck[x].next) {
+        for (; x != -1; x = g.getDeck()[x].next) {
             /* Count card */
             n++;
         }
@@ -1832,13 +1590,13 @@ public class Engine {
     int total_military(Game g, int who) {
         PowerWhere[] w_list = new PowerWhere[100];
         Power o_ptr;
-        int i, n, amt = 0;
+        int n, amt = 0;
 
         /* Get list of settle powers */
         n = get_powers(g, who, PHASE_SETTLE, w_list);
 
         /* Loop over powers */
-        for (i = 0; i < n; i++) {
+        for (int i = 0; i < n; i++) {
             /* Get power pointer */
             o_ptr = w_list[i].o_ptr;
 
@@ -1878,25 +1636,25 @@ public class Engine {
  * Return locations of powers for a given player for the given phase.
  */
     int get_powers(Game g, int who, int phase, PowerWhere[] w_list) {
-        Card c_ptr;
+        Card card;
         Power o_ptr;
-        int x, i, n = 0;
+        int x, n = 0;
 
         /* Get first active card */
         x = g.getPlayer(who).start_head[WHERE_ACTIVE];
 
         /* Loop over cards */
-        for (; x != -1; x = g.deck[x].start_next) {
+        for (; x != -1; x = g.getDeck()[x].start_next) {
             /* Get card pointer */
-            c_ptr = g.deck[x];
+            card = g.getDeck()[x];
 
             /* Loop over card's powers */
-            for (i = 0; i < c_ptr.d_ptr.num_power; i++) {
+            for (int i = 0; i < card.design.num_power; i++) {
                 /* Get power pointer */
-                o_ptr = c_ptr.d_ptr.powers[i];
+                o_ptr = card.design.powers[i];
 
                 /* Skip used powers */
-                if (c_ptr.used[i]) continue;
+                if (card.used[i]) continue;
 
                 /* Skip incorrect phase */
                 if (o_ptr.phase != phase) continue;
@@ -1904,7 +1662,7 @@ public class Engine {
                 /* Check for settle phase and discard power */
                 if (o_ptr.phase == PHASE_SETTLE &&
                         (o_ptr.hasFlag(SettlePowers.DISCARD) &&
-                                c_ptr.where == WHERE_DISCARD)) continue;
+                                card.where == WHERE_DISCARD)) continue;
 
                 /* Copy power location */
                 w_list[n].c_idx = x;
@@ -1922,7 +1680,7 @@ public class Engine {
     /*
     * Add a good to a played card.
     */
-    void add_good(Game g, Card c_ptr) {
+    void add_good(Game g, Card card) {
         int which;
 
         /* Check for simulated game */
@@ -1938,10 +1696,10 @@ public class Engine {
         if (which == -1) return;
 
         /* Move card to owner */
-        move_card(g, which, c_ptr.owner, WHERE_GOOD);
+        move_card(g, which, card.owner, WHERE_GOOD);
 
         /* Mark covered card */
-        c_ptr.covered = which;
+        card.covered = which;
     }
 
 
@@ -1998,8 +1756,8 @@ public class Engine {
  * generator in these cases.
  */
     int first_draw(Game g) {
-        Card c_ptr = null;
-        int i, n;
+        Card card = null;
+        int n;
 
         /* Count draw deck size */
         n = count_draw(g);
@@ -2020,22 +1778,24 @@ public class Engine {
         }
 
         /* Loop over cards */
-        for (i = 0; i < g.deck_size; i++) {
+        int where = g.getDeckSize() - 1;
+        for (int i = 0; i < g.getDeckSize(); i++) {
             /* Skip cards not in draw deck */
-            if (g.deck[i].where != WHERE_DECK) continue;
+            if (g.getDeck()[i].where != WHERE_DECK) continue;
 
             /* Stop at first valid card */
+            where = i;
             break;
         }
 
         /* Clear chosen card's location */
-        g.deck[i].where = -1;
+        g.getDeck()[where].where = -1;
 
         /* Check for just-emptied draw pile */
         if (count_draw(g) == 0) refresh_draw(g);
 
         /* Return chosen card */
-        return i;
+        return where;
     }
 
 
