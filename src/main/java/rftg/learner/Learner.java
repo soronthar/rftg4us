@@ -29,12 +29,12 @@ public class Learner {
                 verbose = true;
             } else if ("-p".equals(arg)) {
                 i++;
-                num_players = Integer.parseInt(args[i]);
+                game.num_players = Integer.parseInt(args[i]);
             } else if ("-a".equals(arg)) {
-                advanced = true;
+                game.advanced = true;
             } else if ("-e".equals(arg)) {
                 i++;
-                expansion = Integer.parseInt(args[i]);
+                game.expanded = Integer.parseInt(args[i]);
             } else if ("-n".equals(arg)) {
                 i++;
                 n = Integer.parseInt(args[i]);
@@ -45,11 +45,6 @@ public class Learner {
                 factor = Integer.parseInt(args[i]);
             }
         }
-        game.num_players = num_players;
-
-        game.expanded = expansion;
-
-        game.advanced = advanced;
 
         /* Assume no options disabled */
         game.goal_disabled = false; //TODO: flip this madness...

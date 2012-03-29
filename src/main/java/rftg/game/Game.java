@@ -1,7 +1,7 @@
 package rftg.game;
 
 import rftg.bundle.cards.CardsDesigns;
-import rftg.game.cards.DesignPile;
+import rftg.game.cards.CardPile;
 
 import java.util.Random;
 
@@ -9,8 +9,8 @@ import static rftg.game.Constants.*;
 
 public class Game {
     public CardsDesigns designs = new CardsDesigns();
-    public DesignPile drawPile;
-    public DesignPile discardPile;
+    public CardPile drawPile;
+    public CardPile discardPile;
 
     public long random_seed;
     long start_seed;
@@ -19,11 +19,11 @@ public class Game {
     boolean simulation;
     int sim_who;
 
-    public int num_players;
-    public int expanded;
-    public boolean advanced;
-    public boolean goal_disabled;
-    public boolean takeover_disabled;
+    public int num_players = 3;
+    public int expanded = 0;
+    public boolean advanced = false;
+    public boolean goal_disabled = true;
+    public boolean takeover_disabled = true;
     public Player[] p = new Player[MAX_PLAYER];
 
     int deck_size;
