@@ -8,7 +8,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-import rftg.bundle.cards.CardsDesigns;
 import rftg.game.Constants;
 
 public class DesignPile {
@@ -23,10 +22,10 @@ public class DesignPile {
 		return pile.iterator();
 	}
 
-	public synchronized void loadFromBundle(CardsDesigns designs) {
-		if (designs != null && designs.count() > 0) {
+	public synchronized void load(Design[] designs) {
+		if (designs != null && designs.length > 0) {
 			pile.clear();
-			pile = Arrays.asList(designs.getCache());
+			pile = Arrays.asList(designs);
 		}
 	}
 
@@ -76,7 +75,7 @@ public class DesignPile {
 	}
 	
 	/**
-	 * Append designs at the end. brazi
+	 * Append designs at the end.
 	 * @param more
 	 */
 	public synchronized void appendDesigns (Collection<Design> more) {
