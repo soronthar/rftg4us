@@ -3,10 +3,19 @@ package rftg.game.ai;
 import rftg.game.Constants;
 import rftg.game.Decisions;
 import rftg.game.Game;
+import rftg.game.Player;
 
 public class EmptyAI implements Decisions {
+    private Player player;
+    private boolean initialized = false;
+
+    public EmptyAI() {
+    }
+
     @Override
-    public void init(Game game, int who, double factor) {
+    public void init(Game game, Player who, double factor) {
+        this.player = who;
+        this.initialized = true;
         System.out.println("EmptyAI.init:9");
     }
 
@@ -62,5 +71,10 @@ public class EmptyAI implements Decisions {
     @Override
     public void shutdown(Game game, int who) {
         System.out.println("EmptyAI.shutdown:50");
+    }
+
+    @Override
+    public boolean isInitialized() {
+        return this.initialized;
     }
 }

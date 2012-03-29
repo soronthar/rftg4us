@@ -2,75 +2,21 @@ package rftg.learner;
 
 import rftg.game.Engine;
 import rftg.game.Game;
+import rftg.game.GameConf;
 import rftg.game.Player;
-import rftg.game.ai.EmptyAI;
+import rftg.misc.CLIParser;
 
 public class Learner {
-    boolean verbose = false;
+
 
     void myMain(String[] args) {
-        Game game = new Game();
+        CLIParser parser = new CLIParser();
+        GameConf conf = parser.parse(args);
+        Game game = new Game(conf);
 
-        int expansion = 0;
-        boolean advanced = false;
-        int num_players = 3;
-        byte[] buff = new byte[1024];
-        double factor = 1.0;
-        int n = 20;
-
-        game.random_seed = 1332996790248L;
-//        game.random_seed=System.currentTimeMillis();
-
-        game.designs.loadFrom("cards.txt");
-//TODO: use a proper library for CLI parsing.
-        for (int i = 1; i < args.length; i++) {
-            String arg = args[i];
-            if ("-v".equals(arg)) {
-                verbose = true;
-            } else if ("-p".equals(arg)) {
-                i++;
-                game.num_players = Integer.parseInt(args[i]);
-            } else if ("-a".equals(arg)) {
-                game.advanced = true;
-            } else if ("-e".equals(arg)) {
-                i++;
-                game.expanded = Integer.parseInt(args[i]);
-            } else if ("-n".equals(arg)) {
-                i++;
-                n = Integer.parseInt(args[i]);
-            } else if ("-r".equals(arg)) {
-                i++;
-                game.random_seed = Integer.parseInt(args[i]);
-            } else if ("-f".equals(arg)) {
-                factor = Integer.parseInt(args[i]);
-            }
-        }
-
-        /* Assume no options disabled */
-        game.goal_disabled = false; //TODO: flip this madness...
-        game.takeover_disabled = false;
-
-        game.initPlayers();
-
-        /* Call initialization functions */
-        for (int i = 0; i < num_players; i++) {
-            Player player = game.p[i];
-            /* Set player name */
-            player.name = "Player " + i;
-
-            /* Set player interfaces to AI functions */
-            player.control = new EmptyAI();
-
-            /* Initialize AI */
-            player.control.init(game, i, factor);
-
-            /* Clear choice log size and position */
-            player.choice_size = 0;
-            player.choice_pos = 0;
-        }
         Engine engine = new Engine();
         /* Play a number of games */
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < conf.n; i++) {
             /* Initialize game */
             engine.init_game(game);
 
@@ -84,9 +30,9 @@ public class Learner {
             engine.score_game(game);
 
             /* Print result */
-            for (int j = 0; j < num_players; j++) {
+            for (int j = 0; j < game.getNumPlayers(); j++) {
                 /* Print score */
-                Player player = game.p[j];
+                Player player = game.getPlayer(j);
                 System.out.printf("%s: %d\n", player.name, player.end_vp);
             }
 
@@ -94,8 +40,8 @@ public class Learner {
             engine.declare_winner(game);
 
             /* Call player game over functions */
-            for (int j = 0; j < num_players; j++) {
-                Player player = game.p[j];
+            for (int j = 0; j < game.getNumPlayers(); j++) {
+                Player player = game.getPlayer(j);
 
                 /* Call game over function */
                 player.control.game_over(game, j);
@@ -107,9 +53,9 @@ public class Learner {
         }
 
         /* Call interface shutdown functions */
-        for (int i = 0; i < num_players; i++) {
+        for (int i = 0; i < game.getNumPlayers(); i++) {
             /* Call shutdown function */
-            game.p[i].control.shutdown(game, i);
+            game.getPlayer(i).control.shutdown(game, i);
         }
     }
 

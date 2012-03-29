@@ -1,6 +1,7 @@
 package rftg.game;
 
 import rftg.bundle.cards.CardsDesigns;
+import rftg.game.ai.EmptyAI;
 import rftg.game.cards.CardPile;
 
 import java.util.Random;
@@ -19,12 +20,11 @@ public class Game {
     boolean simulation;
     int sim_who;
 
-    public int num_players = 3;
     public int expanded = 0;
     public boolean advanced = false;
     public boolean goal_disabled = true;
     public boolean takeover_disabled = true;
-    public Player[] p = new Player[MAX_PLAYER];
+    private Player[] p;
 
     int deck_size;
 
@@ -78,14 +78,64 @@ public class Game {
 
     Random random;
 
-    public void initPlayers() {
-        for (int i = 0; i < this.num_players; i++) {
-            p[i] = new Player();
-        }
+    public Game() {
+        this(GameConf.DEFAULT_CONF);
+    }
+
+    public Game(GameConf conf) {
+        initGameParameters(conf);
+        initRandom();
+        initPlayers(conf);
+    }
+
+    private void initRandom() {
         random = new Random(random_seed);
     }
 
+    private void initGameParameters(GameConf conf) {
+        this.random_seed = conf.seed;
+        this.expanded = conf.expanded;
+        this.advanced = conf.advanced;
+        this.goal_disabled = conf.goal_disabled;
+        this.takeover_disabled = conf.takeover_disabled;
+        this.designs.loadFrom(conf.cardFile);
+    }
+
+    private void initPlayers(GameConf conf) {
+        this.p = new Player[conf.num_players];
+
+        for (int i = 0; i < this.p.length; i++) {
+            Player player = new Player();
+            /* Set player name */
+            player.name = "Player " + i;
+
+            /* Set player interfaces to AI functions */
+            player.control = new EmptyAI();
+
+            /* Initialize AI */
+            player.control.init(this, player, conf.factor);
+
+            /* Clear choice log size and position */
+            player.choice_size = 0;
+            player.choice_pos = 0;
+            this.p[i] = player;
+        }
+    }
+
+
     public int game_rand() {
         return random.nextInt(Integer.MAX_VALUE);
+    }
+
+    public int getNumPlayers() {
+        return this.p.length;
+    }
+
+    public Player getPlayer(int index) {
+        return this.p[index];
+    }
+
+    public void setPlayer(int index, Player p) {
+        this.p[index] = p;
     }
 }

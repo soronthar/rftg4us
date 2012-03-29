@@ -1,7 +1,7 @@
 package rftg.game;
 
 public interface Decisions {
-    void init(Game game, int who, double factor);
+    void init(Game game, Player player, double factor);
 
     void notify_rotation(Game game, int who);
 
@@ -18,4 +18,6 @@ public interface Decisions {
     void game_over(Game game, int who);
 
     void shutdown(Game game, int who);
+
+    boolean isInitialized();
 }
