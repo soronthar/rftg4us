@@ -9,7 +9,7 @@ import java.util.Random;
 
 import static rftg.game.Constants.*;
 
-public class Game implements Cloneable {
+public class Game {
     public CardsDesigns designs = new CardsDesigns();
     public CardPile drawPile;
     public CardPile discardPile;
@@ -26,10 +26,6 @@ public class Game implements Cloneable {
     public boolean goal_disabled;
     public boolean takeover_disabled;
     private Player[] p;
-
-
-    /* Information about each card */
-    private Card[] deck = new Card[MAX_DECK];
 
     int vp_pool;
 
@@ -380,10 +376,5 @@ public class Game implements Cloneable {
     //TODO: change this.
     public Card[] getDeck() {
         return this.drawPile.getCards();
-    }
-
-    @Override
-    public Game clone() throws CloneNotSupportedException {
-        return (Game) super.clone();
     }
 }

@@ -10,7 +10,6 @@ import static rftg.bundle.cards.Flags.*;
 import static rftg.game.Constants.*;
 
 public class Engine {
-    //TODO: the fact that there are many static methods that are used by the AI is an indication that they belong somewhere else
     public static void message_add(String format, Object... params) {
         System.out.printf(format, params);
     }
@@ -58,123 +57,15 @@ public class Engine {
 
         /* Check for second (or later) expansion */
         if (g.expanded >= 2) {
-            /* Loop over players */
-            for (int i = 0; i < g.getNumPlayers(); i++) {
-                /* Choose a Red start world */
-                n = g.game_rand() % num_start_red;
+            //TODO: remove this method object
+            ChoseStartSecondExpansion choseStartSecondExpansion = new ChoseStartSecondExpansion(g, start_red, start_blue, start_picks, hand, n, ns, num_start_red, num_start_blue).invoke();
+            if (choseStartSecondExpansion.is())
+                return;
+            n = choseStartSecondExpansion.getN();
 
-                /* Add to start world choices */
-                start_picks[i][0] = start_red[n];
-
-                /* Collapse list */
-                start_red[n] = start_red[--num_start_red];
-
-                /* Choose a Blue start world */
-                n = g.game_rand() % num_start_blue;
-
-                /* Add to start world choices */
-                start_picks[i][1] = start_blue[n];
-
-                /* Collapse list */
-                start_blue[n] = start_blue[--num_start_blue];
-
-                /* Get card pointer to first start choice */
-                card = g.getDeck()[start_picks[i][0]];
-
-                /* XXX Move card to discard */
-                card.where = WHERE_DISCARD;
-
-                /* Get card pointer to second start choice */
-                card = g.getDeck()[start_picks[i][1]];
-
-                /* XXX Move card to discard */
-                card.where = WHERE_DISCARD;
-            }
-
-            /* Loop over players again */
-            for (int i = 0; i < g.getNumPlayers(); i++) {
-                /* Give player six cards */
-                draw_cards(g, i, 6);
-
-                /* Reset list of cards in hand */
-                n = 0;
-
-                /* Loop over cards */
-                for (int j = 0; j < g.getDeckSize(); j++) {
-                    /* Get card pointer */
-                    card = g.getDeck()[j];
-
-                    /* Skip unowned cards */
-                    if (card.owner != i) continue;
-
-                    /* Skip cards not in hand */
-                    if (card.where != WHERE_HAND) continue;
-
-                    /* Add card to list */
-                    hand[n++] = j;
-                }
-
-                /* Two choices for homeworld */
-                ns = 2;
-
-                /* Ask player which start world they want */
-                send_choice(g, i, CHOICE_START, hand, n, start_picks[i], ns, 0, 0, 0);
-
-                /* Check for aborted game */
-                if (g.game_over) return;
-            }
-
-            /* Wait for answers from all players before revealing choices */
-            wait_for_all(g);
-
-            /* Loop over players */
-            for (int i = 0; i < g.getNumPlayers(); i++) {
-                /* Get answer */
-                extract_choice(g, i, CHOICE_START, hand, n,
-                        start_picks[i], ns);
-
-                /* Apply choice */
-                start_callback(g, i, hand, n, start_picks[i], ns);
-            }
         } else {
-            /* Loop over start worlds */
-            for (int i = 0; i < num_start; i++) {
-                /* Get card pointer for start world */
-                card = g.getDeck()[start[i]];
+            n = chooseStartBaseExpansion(g, start, num_start);
 
-                /* Temporarily move card to discard pile */
-                card.where = WHERE_DISCARD;
-            }
-
-            /* Loop over players */
-            for (int i = 0; i < g.getNumPlayers(); i++) {
-                /* Choose a start world number */
-                n = g.game_rand() % num_start;
-
-                /* Chosen world to player */
-                place_card(g, i, start[n]);
-
-                /* Remember start world */
-                g.getPlayer(i).start = start[n];
-
-                /* Collapse list */
-                start[n] = start[--num_start];
-            }
-
-            /* Loop over start worlds */
-            for (int i = 0; i < num_start; i++) {
-                /* Get card pointer for start world */
-                card = g.getDeck()[start[i]];
-
-                /* Move card back to deck */
-                card.where = WHERE_DECK;
-            }
-
-            /* Loop over players again */
-            for (int i = 0; i < g.getNumPlayers(); i++) {
-                /* Give player six cards */
-                draw_cards(g, i, 6);
-            }
         }
 
         /* Find lowest numbered start world */
@@ -279,6 +170,49 @@ public class Engine {
         g.cur_action = -1;
 
 
+    }
+
+    private int chooseStartBaseExpansion(Game g, int[] start, int num_start) {
+        Card card;/* Loop over start worlds */
+        for (int i = 0; i < num_start; i++) {
+            /* Get card pointer for start world */
+            card = g.getDeck()[start[i]];
+
+            /* Temporarily move card to discard pile */
+            card.where = WHERE_DISCARD;
+        }
+        int n = 0;
+
+        /* Loop over players */
+        for (int i = 0; i < g.getNumPlayers(); i++) {
+            /* Choose a start world number */
+            n = g.game_rand() % num_start;
+
+            /* Chosen world to player */
+            place_card(g, i, start[n]);
+
+            /* Remember start world */
+            g.getPlayer(i).start = start[n];
+
+            /* Collapse list */
+            start[n] = start[--num_start];
+        }
+
+        /* Loop over start worlds */
+        for (int i = 0; i < num_start; i++) {
+            /* Get card pointer for start world */
+            card = g.getDeck()[start[i]];
+
+            /* Move card back to deck */
+            card.where = WHERE_DECK;
+        }
+
+        /* Loop over players again */
+        for (int i = 0; i < g.getNumPlayers(); i++) {
+            /* Give player six cards */
+            draw_cards(g, i, 6);
+        }
+        return n;
     }
 
     public boolean game_round(Game game) {
@@ -1795,4 +1729,123 @@ public class Engine {
     }
 
 
+    private class ChoseStartSecondExpansion {
+        private boolean myResult;
+        private Game g;
+        private int[] start_red;
+        private int[] start_blue;
+        private int[][] start_picks;
+        private int[] hand;
+        private int n;
+        private int ns;
+        private int num_start_red;
+        private int num_start_blue;
+
+        public ChoseStartSecondExpansion(Game g, int[] start_red, int[] start_blue, int[][] start_picks, int[] hand, int n, int ns, int num_start_red, int num_start_blue) {
+            this.g = g;
+            this.start_red = start_red;
+            this.start_blue = start_blue;
+            this.start_picks = start_picks;
+            this.hand = hand;
+            this.n = n;
+            this.ns = ns;
+            this.num_start_red = num_start_red;
+            this.num_start_blue = num_start_blue;
+        }
+
+        boolean is() {
+            return myResult;
+        }
+
+        public int getN() {
+            return n;
+        }
+
+        public ChoseStartSecondExpansion invoke() {
+            Card card;/* Loop over players */
+            for (int i = 0; i < g.getNumPlayers(); i++) {
+                /* Choose a Red start world */
+                n = g.game_rand() % num_start_red;
+
+                /* Add to start world choices */
+                start_picks[i][0] = start_red[n];
+
+                /* Collapse list */
+                start_red[n] = start_red[--num_start_red];
+
+                /* Choose a Blue start world */
+                n = g.game_rand() % num_start_blue;
+
+                /* Add to start world choices */
+                start_picks[i][1] = start_blue[n];
+
+                /* Collapse list */
+                start_blue[n] = start_blue[--num_start_blue];
+
+                /* Get card pointer to first start choice */
+                card = g.getDeck()[start_picks[i][0]];
+
+                /* XXX Move card to discard */
+                card.where = WHERE_DISCARD;
+
+                /* Get card pointer to second start choice */
+                card = g.getDeck()[start_picks[i][1]];
+
+                /* XXX Move card to discard */
+                card.where = WHERE_DISCARD;
+            }
+
+            /* Loop over players again */
+            for (int i = 0; i < g.getNumPlayers(); i++) {
+                /* Get player pointer */
+
+
+                /* Give player six cards */
+                draw_cards(g, i, 6);
+
+                /* Reset list of cards in hand */
+                n = 0;
+
+                /* Loop over cards */
+                for (int j = 0; j < g.getDeckSize(); j++) {
+                    /* Get card pointer */
+                    card = g.getDeck()[j];
+
+                    /* Skip unowned cards */
+                    if (card.owner != i) continue;
+
+                    /* Skip cards not in hand */
+                    if (card.where != WHERE_HAND) continue;
+
+                    /* Add card to list */
+                    hand[n++] = j;
+                }
+
+                /* Two choices for homeworld */
+                ns = 2;
+
+                /* Ask player which start world they want */
+                send_choice(g, i, CHOICE_START, hand, n, start_picks[i], ns, 0, 0, 0);
+
+                /* Check for aborted game */
+                if (g.game_over) myResult = true;
+                return this;
+            }
+
+            /* Wait for answers from all players before revealing choices */
+            wait_for_all(g);
+
+            /* Loop over players */
+            for (int i = 0; i < g.getNumPlayers(); i++) {
+                /* Get answer */
+                extract_choice(g, i, CHOICE_START, hand, n,
+                        start_picks[i], ns);
+
+                /* Apply choice */
+                start_callback(g, i, hand, n, start_picks[i], ns);
+            }
+            myResult = false;
+            return this;
+        }
+    }
 }
