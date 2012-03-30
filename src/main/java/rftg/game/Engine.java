@@ -10,6 +10,7 @@ import static rftg.bundle.cards.Flags.*;
 import static rftg.game.Constants.*;
 
 public class Engine {
+    //TODO: the fact that there are many static methods that are used by the AI is an indication that they belong somewhere else
     public static void message_add(String format, Object... params) {
         System.out.printf(format, params);
     }
@@ -92,9 +93,6 @@ public class Engine {
 
             /* Loop over players again */
             for (int i = 0; i < g.getNumPlayers(); i++) {
-                /* Get player pointer */
-
-
                 /* Give player six cards */
                 draw_cards(g, i, 6);
 
@@ -120,8 +118,7 @@ public class Engine {
                 ns = 2;
 
                 /* Ask player which start world they want */
-                send_choice(g, i, CHOICE_START, hand, n,
-                        start_picks[i], ns, 0, 0, 0);
+                send_choice(g, i, CHOICE_START, hand, n, start_picks[i], ns, 0, 0, 0);
 
                 /* Check for aborted game */
                 if (g.game_over) return;
@@ -371,8 +368,7 @@ public class Engine {
         if (p_ptr.choice_pos < p_ptr.choice_size) return;
 
         /* Ask player for answer */
-        p_ptr.control.make_choice(g, who, type, list, nl, special, ns,
-                arg1, arg2, arg3);
+        p_ptr.control.make_choice(g, who, type, list, nl, special, ns, arg1, arg2, arg3);
     }
 
     /*
@@ -500,7 +496,7 @@ public class Engine {
     /*
     * Place a card on the table for the given player.
     */
-    void place_card(Game g, int who, int which) {
+    public static void place_card(Game g, int who, int which) {
         Player p_ptr;
         Card card;
 
@@ -615,7 +611,7 @@ public class Engine {
     /*
     * Called when player has chosen which cards to discard.
     */
-    void discard_callback(Game g, int who, int list[], int num) {
+    public static void discard_callback(Game g, int who, int list[], int num) {
 
         /* Loop over choices */
         for (int i = 0; i < num; i++) {
@@ -666,7 +662,7 @@ public class Engine {
     *
     * This MUST be called when a card is moved to or from a player.
     */
-    void move_card(Game g, int which, int owner, int where) {
+    static void move_card(Game g, int which, int owner, int where) {
         Player p_ptr;
         Card card;
         int x;
@@ -1003,7 +999,7 @@ public class Engine {
     /*
  * Return a card index from the draw deck.
  */
-    int random_draw(Game g) {
+    static int random_draw(Game g) {
         int n;
 
         /* Count draw deck size */
@@ -1499,7 +1495,7 @@ public class Engine {
     /*
     * Return the number of cards in the draw deck.
     */
-    int count_draw(Game g) {
+    static int count_draw(Game g) {
         Card card;
         int n = 0;
 
@@ -1519,7 +1515,7 @@ public class Engine {
     /*
     * Refresh the draw deck.
     */
-    void refresh_draw(Game g) {
+    static void refresh_draw(Game g) {
         Card card;
 
         /* Message */
@@ -1680,7 +1676,7 @@ public class Engine {
     /*
     * Add a good to a played card.
     */
-    void add_good(Game g, Card card) {
+    static void add_good(Game g, Card card) {
         int which;
 
         /* Check for simulated game */
@@ -1706,7 +1702,7 @@ public class Engine {
     /*
     * Give a player some prestige.
     */
-    void gain_prestige(Game g, int who, int num) {
+    static void gain_prestige(Game g, int who, int num) {
         Player p_ptr;
 
         /* Get player pointer */
@@ -1755,7 +1751,7 @@ public class Engine {
  * and other non-essential tasks.  We don't want to use the random number
  * generator in these cases.
  */
-    int first_draw(Game g) {
+    static int first_draw(Game g) {
         Card card = null;
         int n;
 
